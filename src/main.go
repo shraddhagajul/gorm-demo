@@ -35,6 +35,17 @@ func main() {
 	db.Last(&lastUser)
 	fmt.Println(lastUser)
 
+	queryUser := User{Username: "manny"}
+	db.Where(&queryUser).First(&queryUser)
+
+	queryUser.LastName = "Chris N."
+
+	db.Save(&queryUser)
+	fmt.Println("Query user ", queryUser)
+	fetchUpdatedUser := User{}
+	db.Where(&queryUser).First(&fetchUpdatedUser)
+	fmt.Println("Updated User : ", fetchUpdatedUser)
+
 	fmt.Println("done")
 }
 
