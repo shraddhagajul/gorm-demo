@@ -14,13 +14,24 @@ func main() {
 	}
 	defer db.Close()
 
-	pdb := db.DB()
-	defer pdb.Close()
-	err = pdb.Ping()
-	if err != nil {
-		panic(err.Error())
+	db.DropTable(&User{})
+	db.CreateTable(&User{})
+
+	user := User{
+		Username: "test_user",
+		FirstName: "Test",
+		LastName: "User",
 	}
-	
-	fmt.Println("Connection to databse connection")
+
+	db.Create(&user)
+
+	fmt.Println("done")
+	fmt.Println(user)
 }
 
+type User struct {
+	Id uint
+	Username string
+	FirstName string
+	LastName string
+}
