@@ -46,6 +46,7 @@ func main() {
 	db.Where(&queryUser).First(&fetchUpdatedUser)
 	fmt.Println("Updated User : ", fetchUpdatedUser)
 
+	db.Where(&User{Username: "danny"}).Delete(&User{})
 	fmt.Println("done")
 }
 
