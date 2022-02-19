@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
 )
@@ -15,39 +13,9 @@ func main() {
 	defer db.Close()
 
 	db.DropTable(&User{})
+	// db.SingularTable(true)
 	db.CreateTable(&User{})
 
-	users := make([]User, 0)
-
-	users = append(users, User{Username: "danny", FirstName: "Dan", LastName: "Morris"})
-	users = append(users, User{Username: "manny", FirstName: "Manuel", LastName: "Chris"})
-	users = append(users, User{Username: "john", FirstName: "John", LastName: "Doe"})
-
-	for _, user := range users {
-		db.Create(&user)
-	}
-
-	firstUser := User{}
-	db.First(&firstUser)
-	fmt.Println(firstUser)
-
-	lastUser := User{}
-	db.Last(&lastUser)
-	fmt.Println(lastUser)
-
-	queryUser := User{Username: "manny"}
-	db.Where(&queryUser).First(&queryUser)
-
-	queryUser.LastName = "Chris N."
-
-	db.Save(&queryUser)
-	fmt.Println("Query user ", queryUser)
-	fetchUpdatedUser := User{}
-	db.Where(&queryUser).First(&fetchUpdatedUser)
-	fmt.Println("Updated User : ", fetchUpdatedUser)
-
-	db.Where(&User{Username: "danny"}).Delete(&User{})
-	fmt.Println("done")
 }
 
 type User struct {
@@ -55,4 +23,8 @@ type User struct {
 	Username  string
 	FirstName string
 	LastName  string
+}
+
+func (u User) TableName() string {
+	return "stakeholders"
 }
