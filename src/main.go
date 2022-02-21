@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
@@ -16,43 +17,69 @@ func main() {
 
 	db.DropTable(&User{})
 	db.CreateTable(&User{})
+	db.DropTable(&Calendar{})
+	db.CreateTable(&Calendar{})
+	db.DropTable(&Appointment{})
+	db.CreateTable(&Appointment{})
 
-	users := make([]User, 0)
+	db.Debug().Model(&Calendar{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
 
-	users = append(users, User{Username: "danny", FirstName: "Dan", LastName: "Morris"})
-	users = append(users, User{Username: "manny", FirstName: "Manuel", LastName: "Chris"})
-	users = append(users, User{Username: "john", FirstName: "John", LastName: "Doe"})
-
-	for _, user := range users {
-		db.Create(&user)
+	users := []User{
+		{Username: "manny"},
+		{Username: "danny"},
+		{Username: "nick"},
 	}
 
-	firstUser := User{}
-	db.First(&firstUser)
-	fmt.Println(firstUser)
+	for i := range users {
+		db.Save(&users[i])
+	}
 
-	lastUser := User{}
-	db.Last(&lastUser)
-	fmt.Println(lastUser)
+	db.Debug().Save(&User{
+		Username: "joe_jonas",
+		FirstName: "Joe",
+		LastName: "Jonas",
+		Calendar: Calendar{
+			Name: "2022 itinerary",
+			Apointments: []Appointment{
+				{Subject: "Tour New York", Attendees: users },
+				{Subject: "Tour Washington", Attendees: users},
+			},
+		},
+	})
 
-	queryUser := User{Username: "manny"}
-	db.Where(&queryUser).First(&queryUser)
+	
 
-	queryUser.LastName = "Chris N."
-
-	db.Save(&queryUser)
-	fmt.Println("Query user ", queryUser)
-	fetchUpdatedUser := User{}
-	db.Where(&queryUser).First(&fetchUpdatedUser)
-	fmt.Println("Updated User : ", fetchUpdatedUser)
-
-	db.Where(&User{Username: "danny"}).Delete(&User{})
-	fmt.Println("done")
+	u:= &User{}
+	c:= &Calendar{}
+	db.First(&u).Related(&c, "calender")
+	//Note : while using first...related : gorm doesnt inflate the child object by default 
+	fmt.Println(u)
+	// &{{1 2022-02-21 07:39:49.377786 +0000 UTC 2022-02-21 07:39:49.377786 +0000 UTC <nil>} joe_jonas Joe Jonas {{0 0001-01-01 00:00:00 +0000 UTC 0001-01-01 00:00:00 +0000 UTC <nil>}  0}}
+	fmt.Println()
+	fmt.Println(c)
 }
 
 type User struct {
-	Id        uint
+	gorm.Model
 	Username  string
 	FirstName string
 	LastName  string
+	Calendar  Calendar
+}
+
+type Calendar struct {
+	gorm.Model
+	Name   string
+	UserID uint
+	Apointments []Appointment
+}
+
+type Appointment struct {
+	gorm.Model
+	Subject string
+	Description string
+	StartTime time.Time
+	Length uint
+	CalendarID uint
+	Attendees []User    `gorm:"many2many:appointment_user"`
 }
