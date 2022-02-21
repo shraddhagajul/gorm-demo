@@ -35,24 +35,22 @@ func main() {
 	}
 
 	db.Debug().Save(&User{
-		Username: "joe_jonas",
+		Username:  "joe_jonas",
 		FirstName: "Joe",
-		LastName: "Jonas",
+		LastName:  "Jonas",
 		Calendar: Calendar{
 			Name: "2022 itinerary",
 			Apointments: []Appointment{
-				{Subject: "Tour New York", Attendees: users },
+				{Subject: "Tour New York", Attendees: users},
 				{Subject: "Tour Washington", Attendees: users},
 			},
 		},
 	})
 
-	
-
-	u:= &User{}
-	c:= &Calendar{}
+	u := &User{}
+	c := &Calendar{}
 	db.First(&u).Related(&c, "calender")
-	//Note : while using first...related : gorm doesnt inflate the child object by default 
+	//Note : while using first...related : gorm doesnt inflate the child object by default
 	fmt.Println(u)
 	// &{{1 2022-02-21 07:39:49.377786 +0000 UTC 2022-02-21 07:39:49.377786 +0000 UTC <nil>} joe_jonas Joe Jonas {{0 0001-01-01 00:00:00 +0000 UTC 0001-01-01 00:00:00 +0000 UTC <nil>}  0}}
 	fmt.Println()
@@ -69,17 +67,23 @@ type User struct {
 
 type Calendar struct {
 	gorm.Model
-	Name   string
-	UserID uint
-	Apointments []Appointment
+	Name        string
+	UserID      uint
+	Apointments []Appointment `gorm:"polymorphic:owner"`
 }
 
 type Appointment struct {
 	gorm.Model
-	Subject string
+	Subject     string
 	Description string
-	StartTime time.Time
-	Length uint
-	CalendarID uint
-	Attendees []User    `gorm:"many2many:appointment_user"`
+	StartTime   time.Time
+	Length      uint
+	OwnerID     uint
+	OwnerType   string
+	Attendees   []User `gorm:"many2many:appointment_user"`
+}
+
+type TaskList struct {
+	gorm.Model
+	Appointments []Appointment `gorm:"polymorphic:owner"`
 }
