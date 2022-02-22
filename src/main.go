@@ -17,10 +17,19 @@ func main() {
 	db.CreateTable(&User{})
 
 	user := &User{Username: "joe_jonas", FirstName: "Joe", LastName: "Jonas"}
-  db.Create(&user)
+ 
+	tx := db.Begin()
 
-	// db.Debug().Delete(&user)
-	db.Debug().Model(&user).Where("first_name = ? ", "Joe").Delete(&user)
+	if err := tx.Create(&user).Error; err != nil {
+		tx.Rollback()
+	}
+
+	user.LastName = "Mcmillan"
+	if err := tx.Save(&user).Error; err == nil {
+		tx.Rollback()
+	}
+
+	tx.Commit()
 
 }
 
