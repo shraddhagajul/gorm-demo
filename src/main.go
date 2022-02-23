@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
@@ -14,11 +13,16 @@ func main() {
 	}
 	defer db.Close()
 	seedDb(db)
-
 	users := []User{}
-	db.First(&users, User{Username: "manny"})
-	db.First(&users, map[string]interface{}{"username": "manny"})
-	fmt.Println(users)
+	// db.Debug().Where("username = ?", "manny").Find(&users)
+	// db.Debug().Where(&User{Username: "danny"}).Find(&users)
+	// db.Debug().Where(map[string]interface{}{"username":"manny"}).Find(&users)
+
+	// db.Debug().Where("username in (?)", []string{"manny", "danny"}).Find(&users)
+	// db.Debug().Where("username like (?)", "%man%").Find(&users)
+
+	// db.Debug().Not("username = ?", "manny").Find(&users)
+	db.Debug().Where("username = ?", "manny").Or("username = ?", "danny").Find(&users)
 
 }
 
