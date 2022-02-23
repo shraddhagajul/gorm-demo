@@ -13,7 +13,25 @@ func main() {
 		panic(err.Error())
 	}
 	defer db.Close()
+	seedDb(db)
 
+	u := User{}
+	// db.Debug().First(&u)	
+	// db.Debug().FirstOrInit(&u, &User{Username: "inTheHouse"})
+	// fmt.Println(u)
+	db.Debug().FirstOrCreate(&u, &User{Username: "inTheHouse"})
+	fmt.Println(&u)
+
+}
+
+type User struct {
+	Id        uint
+	Username  string
+	FirstName string
+	LastName  string
+}
+
+func seedDb(db *gorm.DB) {
 	db.DropTable(&User{})
 	db.CreateTable(&User{})
 
@@ -26,33 +44,4 @@ func main() {
 	for _, user := range users {
 		db.Create(&user)
 	}
-
-	firstUser := User{}
-	db.First(&firstUser)
-	fmt.Println(firstUser)
-
-	lastUser := User{}
-	db.Last(&lastUser)
-	fmt.Println(lastUser)
-
-	queryUser := User{Username: "manny"}
-	db.Where(&queryUser).First(&queryUser)
-
-	queryUser.LastName = "Chris N."
-
-	db.Save(&queryUser)
-	fmt.Println("Query user ", queryUser)
-	fetchUpdatedUser := User{}
-	db.Where(&queryUser).First(&fetchUpdatedUser)
-	fmt.Println("Updated User : ", fetchUpdatedUser)
-
-	db.Where(&User{Username: "danny"}).Delete(&User{})
-	fmt.Println("done")
-}
-
-type User struct {
-	Id        uint
-	Username  string
-	FirstName string
-	LastName  string
 }
