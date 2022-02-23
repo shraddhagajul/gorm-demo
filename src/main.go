@@ -15,12 +15,10 @@ func main() {
 	defer db.Close()
 	seedDb(db)
 
-	u := User{}
-	// db.Debug().First(&u)	
-	// db.Debug().FirstOrInit(&u, &User{Username: "inTheHouse"})
-	// fmt.Println(u)
-	db.Debug().FirstOrCreate(&u, &User{Username: "inTheHouse"})
-	fmt.Println(&u)
+	users := []User{}
+	db.First(&users, User{Username: "manny"})
+	db.First(&users, map[string]interface{}{"username": "manny"})
+	fmt.Println(users)
 
 }
 
