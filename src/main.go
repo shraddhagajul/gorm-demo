@@ -6,7 +6,11 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
 )
-
+type Name struct {
+	FirstName string   //field name should be similar to User struct in order to use scan
+	LastName string
+	Calendars string `gorm:"column:name"`
+}
 func main() {
 	db, err := gorm.Open("postgres", "user=gorm password=gorm dbname=gorm port=5432 sslmode=disable")
 	if err != nil {
@@ -16,6 +20,9 @@ func main() {
 
 	db.DropTable(&User{})
 	db.CreateTable(&User{})
+	db.DropTable(&User{})
+	db.CreateTable(&User{})
+
 
 	users := make([]User, 0)
 
@@ -27,27 +34,47 @@ func main() {
 		db.Create(&user)
 	}
 
-	firstUser := User{}
-	db.First(&firstUser)
-	fmt.Println(firstUser)
+	calendars := make([]Calendar, 0)
+	calendars = append(calendars, Calendar{UserID: 1, Name: "tour1"})
+	calendars = append(calendars, Calendar{UserID: 2, Name: "tour2"})
+	calendars = append(calendars, Calendar{UserID: 3, Name: "tour3"})
+	for _, calendar := range calendars {
+		db.Create(&calendar)
+	}
 
-	lastUser := User{}
-	db.Last(&lastUser)
-	fmt.Println(lastUser)
+	usersInDb := make([]User, 0)
+	db.Debug().Model(&User{}).Limit(2).Find(&usersInDb)
+	//For pagination
+	db.Debug().Model(&User{}).Limit(2).Offset(1).Find(&usersInDb)
+	//inflate specific fields 
+	//If we use select, other value apart for "first_name" & "last_name" will be nil or 0 
+	db.Debug().Model(&User{}).Select([]string{"first_name", "last_name"}).Find(&usersInDb)
+	fmt.Println(&usersInDb)
+	//inflate specific column
+	usernames := []string{}
+	db.Debug().Model(&User{}).Pluck("username", &usernames)
+	fmt.Println(usernames)
+	names := []Name{}
 
-	queryUser := User{Username: "manny"}
-	db.Where(&queryUser).First(&queryUser)
+	//inflate multiple columns. Only fetches given columns
+	db.Debug().Model(&User{}).Select([]string{"first_name","last_name"}).Scan(&names)
+	fmt.Println(names)
+	//Count
+	countUsersInDb := 0
+	db.Debug().Model(&User{}).Count(&countUsersInDb)
+	fmt.Println(countUsersInDb)
 
-	queryUser.LastName = "Chris N."
+	//inflate default values if query fails 
+	defaultUser := User{}
+	db.Debug().Model(&User{}).Where("username = ?", "sammuel").Attrs(&User{FirstName: "Elton"}).FirstOrInit(&defaultUser)
+	fmt.Println("Default user : ",defaultUser)
 
-	db.Save(&queryUser)
-	fmt.Println("Query user ", queryUser)
-	fetchUpdatedUser := User{}
-	db.Where(&queryUser).First(&fetchUpdatedUser)
-	fmt.Println("Updated User : ", fetchUpdatedUser)
+	//To override : scope is in application only, not db
+	db.Debug().Model(&User{}).Where("username = ?", "manny").Assign(&User{FirstName: "Elton"}).FirstOrInit(&defaultUser)
+	fmt.Println("Default user : ",defaultUser)
 
-	db.Where(&User{Username: "danny"}).Delete(&User{})
-	fmt.Println("done")
+	userCalDet := []Name{}
+	db.Debug().Model(&User{}).Joins("inner join calendars on calendars.user_id = users.id").Select("users.first_name, users.last_name, calendars.name").Scan(&userCalDet)
 }
 
 type User struct {
@@ -55,4 +82,10 @@ type User struct {
 	Username  string
 	FirstName string
 	LastName  string
+	Calendar Calendar
+}
+
+type Calendar struct {
+	UserID uint
+	Name string
 }
