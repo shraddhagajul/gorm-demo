@@ -14,7 +14,21 @@ func main() {
 		panic(err.Error())
 	}
 	defer db.Close()
+	seedDb(db)
 
+	users := []User{}
+
+	db.Debug().Preload("Calendar.Appointments").Find(&users)
+
+	for _, u := range users {
+		fmt.Printf("\n%v\n", u.Calendar)
+	}
+
+
+
+}
+
+func seedDb(db *gorm.DB) {
 	db.DropTable(&User{})
 	db.CreateTable(&User{})
 	db.DropTable(&Calendar{})
@@ -46,15 +60,6 @@ func main() {
 			},
 		},
 	})
-
-	u := &User{}
-	c := &Calendar{}
-	db.First(&u).Related(&c, "calender")
-	//Note : while using first...related : gorm doesnt inflate the child object by default
-	fmt.Println(u)
-	// &{{1 2022-02-21 07:39:49.377786 +0000 UTC 2022-02-21 07:39:49.377786 +0000 UTC <nil>} joe_jonas Joe Jonas {{0 0001-01-01 00:00:00 +0000 UTC 0001-01-01 00:00:00 +0000 UTC <nil>}  0}}
-	fmt.Println()
-	fmt.Println(c)
 }
 
 type User struct {
