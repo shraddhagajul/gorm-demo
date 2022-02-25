@@ -20,9 +20,9 @@ func main() {
 
 	db.DropTable(&User{})
 	db.CreateTable(&User{})
-	db.DropTable(&User{})
-	db.CreateTable(&User{})
-
+	db.DropTable(&Calendar{})
+	db.CreateTable(&Calendar{})
+	db.Debug().Model(&Calendar{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
 
 	users := make([]User, 0)
 
@@ -75,6 +75,7 @@ func main() {
 
 	userCalDet := []Name{}
 	db.Debug().Model(&User{}).Joins("inner join calendars on calendars.user_id = users.id").Select("users.first_name, users.last_name, calendars.name").Scan(&userCalDet)
+	fmt.Println(userCalDet)
 }
 
 type User struct {
